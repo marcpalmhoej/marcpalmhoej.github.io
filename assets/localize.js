@@ -36,5 +36,32 @@
     else if (k === 'srcset') v = fixSrcset(v);
     return setAttr.call(this, n, v);
   };
+
+  // Browsers only autoplay muted, inline videos. Mute autoplaying videos that have no controls.
+  function prep(v) {
+    if (!(v instanceof HTMLVideoElement) || v.controls) return;
+    if (!(v.autoplay || v.hasAttribute('autoplay'))) return;
+    v.muted = true; v.defaultMuted = true;
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+    v.playsInline = true;
+  }
+  function scan(root) {
+    if (!root.querySelectorAll) return;
+    if (root instanceof HTMLVideoElement) prep(root);
+    root.querySelectorAll('video').forEach(prep);
+  }
+  var play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function () { prep(this); return play.apply(this, arguments); };
+  var attach = Element.prototype.attachShadow;
+  Element.prototype.attachShadow = function () {
+    var root = attach.apply(this, arguments);
+    new MutationObserver(function (list) {
+      list.forEach(function (m) { m.addedNodes.forEach(scan); });
+    }).observe(root, { childList: true, subtree: true });
+    return root;
+  };
+  new MutationObserver(function (list) {
+    list.forEach(function (m) { m.addedNodes.forEach(scan); });
+  }).observe(document, { childList: true, subtree: true });
   window.__localizeMedia = local;
 })();
