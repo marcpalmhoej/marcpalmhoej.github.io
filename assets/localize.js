@@ -8,6 +8,7 @@
     if (!m) return u;
     var name = m[2];
     try { name = decodeURIComponent(name); } catch (e) {}
+    name = name.replace(/\.mov$/i, '.mp4');
     return '/assets/media/' + m[1] + '-' + encodeURIComponent(name);
   }
   function fixSrcset(v) {
