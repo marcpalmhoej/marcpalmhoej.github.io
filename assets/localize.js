@@ -173,17 +173,32 @@
       return true;
     }
     function run(force) {
+      var phone = document.body && document.body.classList.contains('mobile');
       document.querySelectorAll('column-set').forEach(function (set) {
         var first = set.querySelector(':scope > column-unit[slot="0"]');
         if (!first || !first.querySelector('.about-me')) return;
-        if ((document.body && document.body.classList.contains('mobile')) || !sideBySide(set)) {
-          if (first.style.getPropertyValue('min-width')) first.style.removeProperty('min-width');   // stacked / phone: leave Cargo's layout alone
-          first.__key = null;
+        if (phone) {   // phone: leave Cargo's stacked layout alone
+          set.style.removeProperty('flex-wrap');
+          if (first.style.getPropertyValue('min-width')) first.style.removeProperty('min-width');
+          first.__key = null; return;
+        }
+        // Keep the three columns in one row in every browser (no :has() needed).
+        if (set.style.getPropertyValue('flex-wrap') !== 'nowrap') set.style.setProperty('flex-wrap', 'nowrap', 'important');
+        if (force) first.__noWiden = false;
+        if (first.__noWiden || !sideBySide(set)) {
+          if (first.style.getPropertyValue('min-width')) first.style.removeProperty('min-width');
           return;
         }
         if (!first.__seenAt) first.__seenAt = Date.now();
         var key = Math.round(set.getBoundingClientRect().width) + '/' + window.innerWidth;
         if (force || first.__key !== key) { first.__key = key; widen(first, true); } else { widen(first, false); }
+        // Safety: if the wider column pushes anything out of the row, undo it for good.
+        var units = set.querySelectorAll(':scope > column-unit');
+        var lastRight = units.length ? units[units.length - 1].getBoundingClientRect().right : 0;
+        if (first.style.getPropertyValue('min-width') && (!sideBySide(set) || lastRight > window.innerWidth - 8)) {
+          first.style.removeProperty('min-width');
+          first.__noWiden = true;
+        }
       });
     }
     var resizeTimer;
