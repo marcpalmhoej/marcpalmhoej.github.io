@@ -179,5 +179,47 @@
     setInterval(function () { run(false); }, 400);   // re-applies if Cargo re-renders the column
     document.addEventListener('DOMContentLoaded', function () { run(false); });
   })();
+
+  // Info page (desktop): level the menu and the first text lines of all three columns with the headings.
+  (function () {
+    function firstTop(el) {
+      if (!el) return null;
+      var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: function (n) { return n.textContent.trim() ? 1 : 2; } });
+      var n = w.nextNode(); if (!n) return null;
+      var r = document.createRange(); r.selectNodeContents(n);
+      var rects = r.getClientRects(); return rects.length ? rects[0].top : null;
+    }
+    function shift(el, delta) {
+      var off = (el.__alignOff || 0) + delta;
+      el.__alignOff = off;
+      el.style.transform = Math.abs(off) < 0.05 ? '' : 'translateY(' + off.toFixed(2) + 'px)';
+    }
+    function visible(el) { return el && getComputedStyle(el).display !== 'none' ? el : null; }
+    function alignInfo() {
+      var brand = document.querySelector('.brand');
+      var about = document.querySelector('.about-text p');
+      var ew = document.querySelector('.education-work');
+      var clients = document.querySelector('.clients');
+      var onInfo = about && ew && clients && !(document.body && document.body.classList.contains('mobile'));
+      if (!onInfo) { if (brand && brand.__alignOff) { brand.__alignOff = 0; brand.style.transform = ''; } return; }
+      // 1. menu level with the column headings
+      var head = firstTop(ew.querySelector('h2')), b = firstTop(brand);
+      if (head != null && b != null && Math.abs(head - b) > 0.25) shift(brand, head - b);
+      // 2. first line of text level across the three columns (About text is the reference)
+      var ref = firstTop(about);
+      var edu = document.getElementById('education'), work = document.getElementById('work');
+      var shown = visible(edu) || visible(work);
+      var cur = firstTop(shown);
+      if (ref != null && cur != null && Math.abs(ref - cur) > 0.25) {
+        var d = ref - cur; [edu, work].forEach(function (e) { if (e) shift(e, d); });
+      }
+      var c = firstTop(clients);
+      if (ref != null && c != null && Math.abs(ref - c) > 0.25) shift(clients, ref - c);
+    }
+    setInterval(alignInfo, 400);
+    window.addEventListener('resize', function () { setTimeout(alignInfo, 600); });
+    var origShow = window.show;
+    window.show = function (sec) { origShow.apply(this, arguments); alignInfo(); };
+  })();
   window.__localizeMedia = local;
 })();
