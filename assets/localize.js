@@ -135,6 +135,7 @@
     var st = document.createElement('style');
     st.textContent =
       '.education-work h2 span{font:inherit !important;letter-spacing:inherit !important}' +
+      '.education-work .year{font:inherit !important;letter-spacing:inherit !important;color:rgb(255,255,255) !important;text-decoration:underline !important;text-decoration-thickness:1px !important;text-underline-offset:0.2em !important}' +
       '.education-work #education,.education-work #work{' +
       'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
       'line-height:1.45 !important;color:rgba(255,255,255,.85) !important}';
@@ -146,7 +147,12 @@
     var st = document.createElement('style');
     st.textContent = 'body:not(.mobile) .about-me .contactme h2 br{display:none !important}' +
       'body:not(.mobile) .about-me{top:0 !important}' +
-      'body:not(.mobile) .about-text p{line-height:1.45 !important}' +
+      'body:not(.mobile) .about-text p,body:not(.mobile) .address p,body:not(.mobile) .address a,' +
+      'body:not(.mobile) .clients,body:not(.mobile) #education,body:not(.mobile) #work{' +
+      'font-family:"Helvetica Neue",Helvetica,sans-serif !important;' +
+      'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
+      'line-height:1.45 !important;font-weight:400 !important;color:rgba(255,255,255,.85) !important;letter-spacing:normal !important}' +
+      'body:not(.mobile) .address p,body:not(.mobile) .about-text p{margin-top:0 !important;margin-bottom:0 !important}' +
       'body:not(.mobile) column-set:has(.about-me){flex-wrap:nowrap !important}';
     (document.head || document.documentElement).appendChild(st);
     var FACTOR = 1.1;
@@ -205,17 +211,17 @@
       if (!onInfo) { if (brand && brand.__alignOff) { brand.__alignOff = 0; brand.style.transform = ''; } return; }
       // 1. menu level with the column headings
       var head = firstTop(ew.querySelector('h2')), b = firstTop(brand);
-      if (head != null && b != null && Math.abs(head - b) > 0.25) shift(brand, head - b);
+      if (head != null && b != null && Math.abs(head - b) > 0.04) shift(brand, head - b);
       // 2. first line of text level across the three columns (About text is the reference)
       var ref = firstTop(about);
       var edu = document.getElementById('education'), work = document.getElementById('work');
       var shown = visible(edu) || visible(work);
       var cur = firstTop(shown);
-      if (ref != null && cur != null && Math.abs(ref - cur) > 0.25) {
+      if (ref != null && cur != null && Math.abs(ref - cur) > 0.04) {
         var d = ref - cur; [edu, work].forEach(function (e) { if (e) shift(e, d); });
       }
       var c = firstTop(clients);
-      if (ref != null && c != null && Math.abs(ref - c) > 0.25) shift(clients, ref - c);
+      if (ref != null && c != null && Math.abs(ref - c) > 0.04) shift(clients, ref - c);
     }
     setInterval(alignInfo, 400);
     window.addEventListener('resize', function () { setTimeout(alignInfo, 600); });
