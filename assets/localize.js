@@ -1,5 +1,24 @@
 // Redirects Cargo CDN media URLs to the local copies in /assets/media
 (function () {
+  // Serve Cargo's page API from our own static copies (/assets/pages/<purl>.json), so the site no longer depends on Cargo's servers.
+  (function () {
+    var API = /^https?:\/\/api\.cargo\.site\/v1\/pages\/\d+\/url\/([^?#]+)/;
+    function mapApi(u) { var m = API.exec(String(u)); return m ? '/assets/pages/' + m[1] + '.json' : u; }
+    var xhrOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url) {
+      var args = Array.prototype.slice.call(arguments); args[1] = mapApi(url);
+      return xhrOpen.apply(this, args);
+    };
+    var nativeFetch = window.fetch;
+    if (nativeFetch) window.fetch = function (input, init) {
+      try {
+        if (typeof input === 'string') input = mapApi(input);
+        else if (input && input.url) { var m = mapApi(input.url); if (m !== input.url) input = new Request(m, input); }
+      } catch (e) {}
+      return nativeFetch.call(this, input, init);
+    };
+  })();
+
   var RE = /^https?:\/\/freight\.cargo\.site\/.*?\/([A-Z]\d{15,})\/([^?#]+)/;
   var files = null;
   function local(u) {
