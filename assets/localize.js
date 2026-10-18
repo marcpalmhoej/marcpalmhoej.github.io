@@ -281,5 +281,37 @@
     var origShow = window.show;
     window.show = function (sec) { origShow.apply(this, arguments); alignInfo(); };
   })();
+
+  // Footer: 5% bigger everywhere, and shown on the Info page (desktop) like on Works.
+  (function () {
+    var css = document.createElement('style');
+    css.textContent =
+      '#mp-footer .mp-footer-left,#mp-footer .mp-footer-right{font-size:1.05rem !important}' +
+      '#mp-footer{margin-top:1rem;padding-left:17.5px}' +
+      '#mp-footer .mp-footer-inner{border-top:1px solid #444;padding-top:.5rem;display:flex;justify-content:space-between;align-items:center;width:100%}' +
+      '#mp-footer .mp-footer-left{text-align:left;padding-left:0}#mp-footer .mp-footer-right{text-align:right}';
+    (document.head || document.documentElement).appendChild(css);
+    function ensureFooter() {
+      var ew = document.querySelector('.education-work');
+      var injected = document.querySelector('bodycopy[data-info-footer]');
+      var phone = document.body && document.body.classList.contains('mobile');
+      if (!ew || phone) { if (injected) { injected.remove(); } return; }   // footer is desktop-only, like on Works
+      var pc = ew.closest('.page-content');
+      if (!pc) return;
+      // Fill the window exactly (minus the wrapper's own bottom padding) so the page doesn't scroll.
+      var pb = parseFloat(getComputedStyle(pc.parentElement).paddingBottom) || 0;
+      var minH = 'calc(100vh - ' + pb.toFixed(2) + 'px)';
+      if (pc.style.minHeight !== minH) pc.style.minHeight = minH;
+      if (pc.querySelector('#mp-footer')) return;
+      var bc = document.createElement('bodycopy');
+      bc.setAttribute('data-info-footer', '');
+      bc.setAttribute('style', '--fit-height:10px;--resize-parent-width:100%;margin-top:auto');
+      bc.innerHTML = '<div id="mp-footer"><div class="mp-footer-inner"><div class="mp-footer-left">All Rights Reserved.</div>' +
+                     '<div class="mp-footer-right">Marc Palmhøj © 2026</div></div></div>';
+      pc.style.boxSizing = 'border-box'; pc.style.display = 'flex'; pc.style.flexDirection = 'column';
+      pc.appendChild(bc);
+    }
+    setInterval(ensureFooter, 400);
+  })();
   window.__localizeMedia = local;
 })();
