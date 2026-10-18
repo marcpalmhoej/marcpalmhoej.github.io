@@ -140,5 +140,44 @@
       'line-height:1.45 !important;color:rgba(255,255,255,.85) !important}';
     (document.head || document.documentElement).appendChild(st);
   })();
+
+  // Info page (desktop): About Me column 10% wider, and its heading aligned with the other columns.
+  (function () {
+    var st = document.createElement('style');
+    st.textContent = 'body:not(.mobile) .about-me .contactme h2 br{display:none !important}' +
+      'body:not(.mobile) .about-me{top:0 !important}' +
+      'body:not(.mobile) column-set:has(.about-me){flex-wrap:nowrap !important}';
+    (document.head || document.documentElement).appendChild(st);
+    var FACTOR = 1.1;
+    function widen(first, force) {
+      // Measure the column at Cargo's own width, then add exactly +10% via min-width.
+      if (!force && first.style.getPropertyValue('min-width')) return;   // already applied
+      first.style.removeProperty('min-width');
+      var base = first.getBoundingClientRect().width;
+      if (!base) return;
+      first.style.setProperty('min-width', (base * FACTOR).toFixed(2) + 'px', 'important');
+    }
+    function run(force) {
+      if (document.body && document.body.classList.contains('mobile')) return;
+      document.querySelectorAll('column-set').forEach(function (set) {
+        var first = set.querySelector(':scope > column-unit[slot="0"]');
+        if (first && first.querySelector('.about-me')) {
+          if (!first.__seenAt) first.__seenAt = Date.now();
+          // Re-measure whenever the container size changed (Cargo's layout settles after load).
+          var key = Math.round(set.getBoundingClientRect().width) + '/' + window.innerWidth;
+          if (force || first.__key !== key) {
+            first.__key = key;
+            widen(first, true);
+          } else {
+            widen(first, false);
+          }
+        }
+      });
+    }
+    var resizeTimer;
+    window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { run(true); }, 500); });
+    setInterval(function () { run(false); }, 400);   // re-applies if Cargo re-renders the column
+    document.addEventListener('DOMContentLoaded', function () { run(false); });
+  })();
   window.__localizeMedia = local;
 })();
