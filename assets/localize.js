@@ -138,7 +138,7 @@
     document.querySelectorAll('.education-work').forEach(function (el) {
       if (el.__switchReady) return;
       el.__switchReady = true;
-      window.show('education');
+      window.show('work');
       el.querySelectorAll('h2 span').forEach(function (sp) {
         sp.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sp.click(); }
@@ -154,6 +154,7 @@
     var st = document.createElement('style');
     st.textContent =
       '.education-work h2 span{font:inherit !important;letter-spacing:inherit !important}' +
+      '.address a,.education-work h2 span{text-decoration:underline !important;text-decoration-thickness:1px !important;text-underline-offset:0.2em !important}' +
       '.education-work .year{font:inherit !important;letter-spacing:inherit !important;color:rgb(255,255,255) !important;text-decoration:underline !important;text-decoration-thickness:1px !important;text-underline-offset:0.2em !important}' +
       '.education-work #education,.education-work #work{' +
       'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
