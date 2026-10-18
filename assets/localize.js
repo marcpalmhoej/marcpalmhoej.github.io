@@ -154,6 +154,8 @@
     var st = document.createElement('style');
     st.textContent =
       '.education-work h2 span{font:inherit !important;letter-spacing:inherit !important}' +
+      '.address a,.education-work h2 span{text-decoration:none !important;background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-position:0 100%;background-size:0% 1px;transition:background-size .35s ease,color .3s ease !important}' +
+      '.address a:hover,.address a:focus-visible,.address a:active,.education-work h2 span:hover,.education-work h2 span:focus-visible,.education-work h2 span[aria-pressed="true"]{background-size:100% 1px}' +
       '.education-work .year{font:inherit !important;letter-spacing:inherit !important;color:rgb(255,255,255) !important;text-decoration:underline !important;text-decoration-thickness:1px !important;text-underline-offset:0.2em !important}' +
       '.education-work #education,.education-work #work{' +
       'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
