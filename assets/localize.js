@@ -129,5 +129,16 @@
   }
   new MutationObserver(initSwitch).observe(document, { childList: true, subtree: true });
   document.addEventListener('DOMContentLoaded', initSwitch);
+
+  // Make the Education / Work block use the same type as the rest of the Info page.
+  (function () {
+    var st = document.createElement('style');
+    st.textContent =
+      '.education-work h2 span{font:inherit !important;letter-spacing:inherit !important}' +
+      '.education-work #education,.education-work #work{' +
+      'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
+      'line-height:1.45 !important;color:rgba(255,255,255,.85) !important}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
   window.__localizeMedia = local;
 })();
