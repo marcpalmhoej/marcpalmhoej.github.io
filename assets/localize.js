@@ -146,6 +146,7 @@
     var st = document.createElement('style');
     st.textContent = 'body:not(.mobile) .about-me .contactme h2 br{display:none !important}' +
       'body:not(.mobile) .about-me{top:0 !important}' +
+      'body:not(.mobile) .about-text p{line-height:1.45 !important}' +
       'body:not(.mobile) column-set:has(.about-me){flex-wrap:nowrap !important}';
     (document.head || document.documentElement).appendChild(st);
     var FACTOR = 1.1;
