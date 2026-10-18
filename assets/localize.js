@@ -27,6 +27,23 @@
   [[HTMLImageElement.prototype, 'src'], [HTMLMediaElement.prototype, 'src'],
    [HTMLSourceElement.prototype, 'src'], [HTMLVideoElement.prototype, 'poster']
   ].forEach(function (x) { patchProp(x[0], x[1], local); });
+
+  // Cargo compares the src it set with img.src. Keep the original string when it resolves to the same URL.
+  (function () {
+    var d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    if (!d || !d.set) return;
+    Object.defineProperty(HTMLImageElement.prototype, 'src', {
+      configurable: true, enumerable: d.enumerable,
+      get: function () {
+        var real = d.get.call(this), raw = this.__rawSrc;
+        if (raw != null) {
+          try { if (new URL(local(raw), location.href).href === real) return raw; } catch (e) {}
+        }
+        return real;
+      },
+      set: function (v) { this.__rawSrc = v; d.set.call(this, v); }
+    });
+  })();
   patchProp(HTMLImageElement.prototype, 'srcset', fixSrcset);
   patchProp(HTMLSourceElement.prototype, 'srcset', fixSrcset);
   var setAttr = Element.prototype.setAttribute;
@@ -63,5 +80,26 @@
   new MutationObserver(function (list) {
     list.forEach(function (m) { m.addedNodes.forEach(scan); });
   }).observe(document, { childList: true, subtree: true });
+
+  // Cargo only loads media once its own visibility signal fires. Send that signal for items near the viewport.
+  function kick() {
+    var fire = window.__cargoFire;
+    if (!fire) return;
+    var vh = window.innerHeight || 800, vw = window.innerWidth || 1200;
+    document.querySelectorAll('gallery-slideshow, gallery-freeform, gallery-grid, gallery-justify, gallery-columns, media-item').forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      var near = r.bottom > -vh * 1.5 && r.top < vh * 2.5 && r.right > -vw && r.left < vw * 2;
+      if (!near) return;
+      var d = { hasLayout: true, visible: true, position: 'inside' };
+      try { fire(el, 'lazyLoadIntersectionChange', d, { bubbles: false }); } catch (e) {}
+      var inside = r.bottom > 0 && r.top < vh && r.right > 0 && r.left < vw;
+      try { fire(el, 'viewportIntersectionChange', { hasLayout: true, visible: inside, position: inside ? 'inside' : (r.bottom <= 0 ? 'above' : 'below') }, { bubbles: false }); } catch (e) {}
+    });
+  }
+  var pending = false;
+  function schedule() { if (pending) return; pending = true; setTimeout(function () { pending = false; kick(); }, 120); }
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule);
+  var ticks = 0, timer = setInterval(function () { kick(); if (++ticks > 40) clearInterval(timer); }, 500);
   window.__localizeMedia = local;
 })();
