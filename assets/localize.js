@@ -101,5 +101,33 @@
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule);
   var ticks = 0, timer = setInterval(function () { kick(); if (++ticks > 40) clearInterval(timer); }, 500);
+
+  // Education / Work switch on the Info page (the original script was commented out in Cargo).
+  window.show = function (section) {
+    var edu = document.getElementById('education'), work = document.getElementById('work');
+    if (edu) edu.style.display = section === 'education' ? 'block' : 'none';
+    if (work) work.style.display = section === 'work' ? 'block' : 'none';
+    document.querySelectorAll('.education-work h2 span').forEach(function (sp) {
+      var isEdu = /education/i.test(sp.textContent);
+      var active = isEdu ? section === 'education' : section === 'work';
+      sp.style.color = active ? '' : '#999';
+      sp.setAttribute('role', 'button'); sp.setAttribute('tabindex', '0');
+      sp.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  };
+  function initSwitch() {
+    document.querySelectorAll('.education-work').forEach(function (el) {
+      if (el.__switchReady) return;
+      el.__switchReady = true;
+      window.show('education');
+      el.querySelectorAll('h2 span').forEach(function (sp) {
+        sp.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sp.click(); }
+        });
+      });
+    });
+  }
+  new MutationObserver(initSwitch).observe(document, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', initSwitch);
   window.__localizeMedia = local;
 })();
