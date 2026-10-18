@@ -147,12 +147,13 @@
     var st = document.createElement('style');
     st.textContent = 'body:not(.mobile) .about-me .contactme h2 br{display:none !important}' +
       'body:not(.mobile) .about-me{top:0 !important}' +
-      'body:not(.mobile) .about-text p,body:not(.mobile) .address p,body:not(.mobile) .address a,' +
-      'body:not(.mobile) .clients,body:not(.mobile) #education,body:not(.mobile) #work{' +
+      '.about-text p,.address p,.address a,' +
+      '.clients,#education,#work{' +
       'font-family:"Helvetica Neue",Helvetica,sans-serif !important;' +
       'font-size:calc(var(--font-scale) * var(--font-size) * 1.0435) !important;' +
       'line-height:1.45 !important;font-weight:400 !important;color:rgba(255,255,255,.85) !important;letter-spacing:normal !important}' +
-      'body:not(.mobile) .address p,body:not(.mobile) .about-text p{margin-top:0 !important;margin-bottom:0 !important}' +
+      '.address p,.about-text p{margin-top:0 !important;margin-bottom:0 !important}' +
+      'body.mobile .address p br{display:none !important}' +
       'body:not(.mobile) column-set:has(.about-me){flex-wrap:nowrap !important}';
     (document.head || document.documentElement).appendChild(st);
     var FACTOR = 1.1;
@@ -164,21 +165,25 @@
       if (!base) return;
       first.style.setProperty('min-width', (base * FACTOR).toFixed(2) + 'px', 'important');
     }
+    function sideBySide(set) {
+      var u = set.querySelectorAll(':scope > column-unit');
+      if (u.length < 2) return false;
+      var t0 = u[0].getBoundingClientRect().top;
+      for (var i = 1; i < u.length; i++) if (Math.abs(u[i].getBoundingClientRect().top - t0) > 2) return false;
+      return true;
+    }
     function run(force) {
-      if (document.body && document.body.classList.contains('mobile')) return;
       document.querySelectorAll('column-set').forEach(function (set) {
         var first = set.querySelector(':scope > column-unit[slot="0"]');
-        if (first && first.querySelector('.about-me')) {
-          if (!first.__seenAt) first.__seenAt = Date.now();
-          // Re-measure whenever the container size changed (Cargo's layout settles after load).
-          var key = Math.round(set.getBoundingClientRect().width) + '/' + window.innerWidth;
-          if (force || first.__key !== key) {
-            first.__key = key;
-            widen(first, true);
-          } else {
-            widen(first, false);
-          }
+        if (!first || !first.querySelector('.about-me')) return;
+        if ((document.body && document.body.classList.contains('mobile')) || !sideBySide(set)) {
+          if (first.style.getPropertyValue('min-width')) first.style.removeProperty('min-width');   // stacked / phone: leave Cargo's layout alone
+          first.__key = null;
+          return;
         }
+        if (!first.__seenAt) first.__seenAt = Date.now();
+        var key = Math.round(set.getBoundingClientRect().width) + '/' + window.innerWidth;
+        if (force || first.__key !== key) { first.__key = key; widen(first, true); } else { widen(first, false); }
       });
     }
     var resizeTimer;
@@ -202,13 +207,25 @@
       el.style.transform = Math.abs(off) < 0.05 ? '' : 'translateY(' + off.toFixed(2) + 'px)';
     }
     function visible(el) { return el && getComputedStyle(el).display !== 'none' ? el : null; }
+    function resetAlign() {
+      [document.querySelector('.brand'), document.getElementById('education'), document.getElementById('work'), document.querySelector('.clients')].forEach(function (el) {
+        if (el && (el.__alignOff || el.style.transform)) { el.__alignOff = 0; el.style.transform = ''; }
+      });
+    }
     function alignInfo() {
       var brand = document.querySelector('.brand');
       var about = document.querySelector('.about-text p');
       var ew = document.querySelector('.education-work');
       var clients = document.querySelector('.clients');
-      var onInfo = about && ew && clients && !(document.body && document.body.classList.contains('mobile'));
-      if (!onInfo) { if (brand && brand.__alignOff) { brand.__alignOff = 0; brand.style.transform = ''; } return; }
+      if (!(about && ew && clients)) { resetAlign(); return; }
+      var set = ew.closest('column-set');
+      var phone = document.body && document.body.classList.contains('mobile');
+      if (phone || !set || !(function () {
+        var u = set.querySelectorAll(':scope > column-unit'); if (u.length < 2) return false;
+        var t0 = u[0].getBoundingClientRect().top;
+        for (var i = 1; i < u.length; i++) if (Math.abs(u[i].getBoundingClientRect().top - t0) > 2) return false;
+        return true;
+      })()) { resetAlign(); return; }
       // 1. menu level with the column headings
       var head = firstTop(ew.querySelector('h2')), b = firstTop(brand);
       if (head != null && b != null && Math.abs(head - b) > 0.04) shift(brand, head - b);
